@@ -1,12 +1,3 @@
-
-#     _____  .__  ____   ___.__    .___            
-#    /  _  \ |__| \   \ /   |__| __| _/____  ____  
-#   /  /_\  \|  |  \   Y   /|  |/ __ _/ __ \/  _ \ 
-#  /    |    |  |   \     / |  / /_/ \  ___(  <_> )
-#  \____|__  |__|    \___/  |__\____ |\___  \____/ 
-#          \/                       \/    \/       
-#                created by rUv
-
 import base64
 import os
 import cv2
@@ -14,9 +5,12 @@ import re
 import numpy as np
 import httpx
 import asyncio
-from quart import Quart, request, jsonify, render_template
+from quart import Quart, request, jsonify, render_template, Response, send_from_directory
+from pathlib import Path
 
 app = Quart(__name__)
+app.config['EXPLAIN_TEMPLATE_LOADING'] = True
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
 
 API_URL = "https://api.openai.com/v1/chat/completions"
 API_KEY = os.getenv("OPENAI_API_KEY")
@@ -33,7 +27,7 @@ def encode_image_to_base64(image: np.ndarray) -> str:
 
 def compose_payload(image_base64: str, prompt: str) -> dict:
     return {
-        "model": "gpt-4-vision-preview",
+        "model": "gpt-4o-mini",
         "messages": [
             {
                 "role": "user",
@@ -59,7 +53,7 @@ def compose_payload(image_base64: str, prompt: str) -> dict:
                 ]
             }
         ],
-        "max_tokens": 2300
+        "max_tokens": 100
     }
 
 def compose_headers(api_key: str) -> dict:
@@ -116,29 +110,83 @@ def parse_wait_time(error_message: str) -> int:
         return int(total_wait_time)
     return None
 
+def add_cors_headers(response):
+    """Add CORS headers to the response"""
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Accept'
+    response.headers['Access-Control-Max-Age'] = '3600'
+    return response
+
+@app.before_serving
+async def startup():
+    print("Registered routes:")
+    for rule in app.url_map.iter_rules():
+        print(f"{rule.endpoint}: {rule.methods} - {rule}")
+    app.api_key = os.getenv("OPENAI_API_KEY")
+
+@app.after_request
+async def after_request(response):
+    return add_cors_headers(response)
+
 @app.route('/')
 async def index():
     return await render_template('index.html')
 
-@app.route('/process_frame', methods=['POST'])
+@app.route('/static/<path:path>')
+async def send_static(path):
+    return await send_from_directory('static', path)
+
+@app.route('/process_frame', methods=['POST', 'OPTIONS'])
 async def process_frame():
-    data = await request.json
-    image_data = data['image'].split(',')[1]
-    image = np.frombuffer(base64.b64decode(image_data), dtype=np.uint8)
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    processed_image = preprocess_image(image)
-    image_base64 = encode_image_to_base64(processed_image)
-    prompt = data.get('prompt', "Analyze this frame")
-    api_key = data.get('api_key') or API_KEY
-    if not api_key:
-        return jsonify({'response': 'API key is required.'}), 400
+    if request.method == 'OPTIONS':
+        response = Response()
+        return add_cors_headers(response)
+
+    print(f"Received {request.method} request to /process_frame")
+    print(f"Request headers: {dict(request.headers)}")
+    
     try:
-        response = await prompt_image(image_base64, prompt, api_key)
-    except ValueError as e:
-        response = str(e)
-    return jsonify({'response': response})
+        if not request.is_json:
+            return jsonify({'response': 'Request must be JSON'}), 400
+            
+        data = await request.get_json()
+        print(f"Received data keys: {data.keys() if data else None}")
+        
+        if not data:
+            return jsonify({'response': 'No data received'}), 400
+            
+        image_data = data.get('image', '').split(',')[1] if data.get('image', '').count(',') > 0 else ''
+        if not image_data:
+            return jsonify({'response': 'Invalid image data'}), 400
+            
+        try:
+            image = np.frombuffer(base64.b64decode(image_data), dtype=np.uint8)
+            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            if image is None:
+                return jsonify({'response': 'Failed to decode image'}), 400
+                
+            processed_image = preprocess_image(image)
+            image_base64 = encode_image_to_base64(processed_image)
+            prompt = data.get('prompt', "Analyze this frame")
+            api_key = data.get('api_key') or API_KEY
+            
+            if not api_key:
+                return jsonify({'response': 'API key is required.'}), 400
+                
+            try:
+                response = await prompt_image(image_base64, prompt, api_key)
+                return jsonify({'response': response})
+            except ValueError as e:
+                return jsonify({'response': str(e)}), 400
+                
+        except Exception as e:
+            print(f"Error processing image: {str(e)}")
+            return jsonify({'response': f'Error processing image: {str(e)}'}), 400
+                
+    except Exception as e:
+        print(f"Error processing request: {str(e)}")
+        return jsonify({'response': f'Error processing request: {str(e)}'}), 400
 
 if __name__ == '__main__':
-    if API_KEY is None:
-        raise ValueError("Please set the OPENAI_API_KEY environment variable")
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

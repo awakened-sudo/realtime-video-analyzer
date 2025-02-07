@@ -149,22 +149,60 @@ function captureFrame() {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg');
 
-    logMessage("Frame captured and sent to API.");
-    fetch('/process_frame', {
+    // logMessage("Frame captured and sent to API.");
+    
+    const requestData = {
+        image: dataUrl,
+        prompt: customPrompt,
+        api_key: apiKey
+    };
+
+    // Get the current origin or default to port 5000
+    const apiUrl = window.location.origin.includes('5000') 
+        ? '/process_frame'
+        : 'http://127.0.0.1:5000/process_frame';
+
+    console.log("Sending request to:", apiUrl);
+    
+    fetch(apiUrl, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
-        body: JSON.stringify({ image: dataUrl, prompt: customPrompt, api_key: apiKey })
+        body: JSON.stringify(requestData)
     })
-    .then(response => response.json())
+    .then(async response => {
+        console.log("Response status:", response.status);
+        console.log("Response headers:", response.headers);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error response:", errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+        
+        const contentType = response.headers.get("content-type");
+        console.log("Content-Type:", contentType);
+        
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new TypeError("Response was not JSON");
+        }
+        
+        return response.json();
+    })
     .then(data => {
-        const formattedMarkdown = marked.parse(data.response); // Fixed function call
-        formattedMarkdownDiv.innerHTML = formattedMarkdown;
-        formattedMarkdownDiv.scrollTop = formattedMarkdownDiv.scrollHeight; // Scroll to bottom
+        console.log("Received data:", data);
+        if (data && data.response) {
+            formattedMarkdownDiv.textContent = data.response;
+            formattedMarkdownDiv.scrollTop = formattedMarkdownDiv.scrollHeight;
+        } else {
+            throw new Error('Invalid response format');
+        }
     })
     .catch(error => {
         console.error('Error:', error);
         logMessage(`Error: ${error.message}`);
+        formattedMarkdownDiv.textContent = `Error: ${error.message}`;
     });
 }
