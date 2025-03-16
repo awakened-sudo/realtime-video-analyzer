@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <!-- 
      _____  .__  ____   ___.__    .___            
@@ -7,123 +6,646 @@
   /    |    |  |   \     / |  / /_/ \  ___(  <_> )
   \____|__  |__|    \___/  |__\____ |\___  \____/ 
           \/                       \/    \/       
-                created by Awakened
+                created by BlacX
         -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Stream Capture and Analysis</title>
+    <title>BLACX Media Stream Capture & Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #475569;
+            --accent-color: #0ea5e9;
+            --danger-color: #ef4444;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+        }
+        
         body {
-            background-color: #f8f9fa;
+            background-color: var(--background-color);
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
         }
+        
         .container {
-            max-width: 720px;
-            margin-top: 20px;
+            max-width: 800px;
+            margin-top: 2rem;
         }
+        
+        .app-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+        
+        .app-description {
+            color: #64748b;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
         #video {
             width: 100%;
             height: auto;
-            background-color: #ddd;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            background-color: #e2e8f0;
+            margin-bottom: 2rem;
+            transition: transform 0.2s ease;
         }
+        
         .button-container {
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 1rem;
         }
-        .btn-group-toggle {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
+        
         .btn-group-toggle .btn {
-            width: auto;
-            margin: 0 10px;
+            background-color: var(--secondary-color);
+            border: none;
+            color: white;
+            margin: 0 0.5rem;
         }
-        .btn-group {
-            margin-bottom: 10px;
+        
+        .btn-group-toggle .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
-        .btn-secondary.active {
-            background-color: #6c757d;
-            border-color: #6c757d;
+        
+        .btn-group-toggle .btn.active {
+            background-color: var(--primary-color);
+        }
+        
+        #startCapture {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        
+        #stopCapture {
+            background-color: var(--danger-color);
+            border: none;
+        }
+        
+        #toggleSettings {
+            background-color: var(--accent-color);
+            border: none;
+        }
+        
+        .settings-panel {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: none;
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #64748b;
+            border: none;
+            padding: 0.75rem 1rem;
+            margin-right: 1rem;
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            background: none;
+        }
+        
+        #formattedMarkdown {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #64748b;
+            margin-top: 2rem;
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Smooth scrollbar for the markdown output */
+        #formattedMarkdown::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #formattedMarkdown::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        #formattedMarkdown::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        #formattedMarkdown::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Prompt Options Styling */
+        .prompt-options .btn-group {
+            gap: 0.5rem;
+        }
+        
+        .prompt-options .btn {
+            flex: 1;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .prompt-options .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .prompt-options .btn-outline-primary:hover,
+        .prompt-options .btn-outline-primary.active {
+            background-color: var(--primary-color);
             color: white;
         }
-        .settings-panel {
-            display: none;
-            margin-bottom: 20px;
+        
+        .prompt-options .btn-outline-danger {
+            color: var(--danger-color);
+            border-color: var(--danger-color);
         }
-        .settings-panel .nav-tabs {
-            margin-bottom: 10px;
+        
+        .prompt-options .btn-outline-danger:hover,
+        .prompt-options .btn-outline-danger.active {
+            background-color: var(--danger-color);
+            color: white;
         }
-        #formattedMarkdown {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-top: 20px;
-            border-radius: 5px;
-            max-height: 200px;
-            overflow-y: auto;
+        
+        .prompt-options .btn-outline-success {
+            color: #10b981;
+            border-color: #10b981;
+        }
+        
+        .prompt-options .btn-outline-success:hover,
+        .prompt-options .btn-outline-success.active {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .form-group label {
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        #customPrompt {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-color: #e2e8f0;
+            transition: border-color 0.2s ease;
+        }
+        
+        #customPrompt:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Enhanced Analysis Modes Styling */
+        .analysis-modes label {
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        
+        .mode-card {
+            position: relative;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .mode-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .mode-card label {
+            display: block;
+            cursor: pointer;
+            margin: 0;
+            text-align: center;
+        }
+        
+        .mode-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .mode-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mode-description {
+            font-size: 0.875rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+        
+        /* Mode Card States */
+        .mode-card:hover {
+            border-color: #94a3b8;
+            transform: translateY(-2px);
+        }
+        
+        .mode-card input[type="radio"]:checked + label {
+            color: var(--primary-color);
+        }
+        
+        .mode-card[data-mode="general"] input[type="radio"]:checked ~ label .mode-icon {
+            color: var(--primary-color);
+        }
+        
+        .mode-card[data-mode="weapon"] input[type="radio"]:checked ~ label .mode-icon {
+            color: var(--danger-color);
+        }
+        
+        .mode-card[data-mode="handsign"] input[type="radio"]:checked ~ label .mode-icon {
+            color: #10b981;
+        }
+        
+        .mode-card input[type="radio"]:checked + label .mode-title {
+            color: inherit;
+        }
+        
+        .mode-card[data-mode="general"]:has(input:checked) {
+            border-color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+        }
+        
+        .mode-card[data-mode="weapon"]:has(input:checked) {
+            border-color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        .mode-card[data-mode="handsign"]:has(input:checked) {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+        
+        /* Custom Prompt Styling */
+        .custom-prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.5rem;
+        }
+        
+        .custom-prompt-header label {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .custom-prompt-header small {
+            font-size: 0.875rem;
+        }
+        
+        #customPrompt {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.2s ease;
+        }
+        
+        #customPrompt:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+        
+        /* Save Button Enhancement */
+        #saveSettings {
+            background: var(--primary-color);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        #saveSettings:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Enhanced Button Styling */
+        .source-buttons {
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-source {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            color: #64748b;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-source:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-source.active {
+            background: #fff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+        
+        .btn-control {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-icon {
+            font-size: 1.25rem;
+            margin-right: 0.5rem;
+        }
+        
+        .btn-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .btn-start {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-start:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-start.capturing {
+            background: #15803d;
+            animation: pulse 2s infinite;
+        }
+        
+        .btn-start.capturing .btn-status {
+            content: '';
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        
+        .btn-stop {
+            background: var(--danger-color);
+            color: white;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .btn-stop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .btn-stop:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+        
+        .btn-settings {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-settings:hover {
+            background: #0284c7;
+            transform: translateY(-1px);
+        }
+        
+        .btn-settings.active {
+            background: #0369a1;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(21, 128, 61, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(21, 128, 61, 0);
+            }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Mobile Responsiveness for Buttons */
+        @media (max-width: 768px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-control {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container text-center">
-        <h2 class="my-4">BLACX Media Stream Capture & Analysis</h2>
-        <p class="mb-4">A web app to capture and analyze media streams from your webcam, desktop, or specific apps. Easily switch sources and capture frames at intervals. Use AI for insightful frame analysis and summaries.</p>
-        <video id="video" class="mb-4" autoplay></video>
-        <div class="button-container">
-            <div class="btn-group btn-group-toggle mb-4" data-toggle="buttons">
-                <label class="btn btn-secondary">
-                    <input type="radio" name="options" id="shareWebcam" autocomplete="off"> Share Webcam
-                </label>
-                <label class="btn btn-secondary">
-                    <input type="radio" name="options" id="shareScreen" autocomplete="off"> Share Screen
-                </label>
-                <label class="btn btn-secondary">
-                    <input type="radio" name="options" id="shareApplication" autocomplete="off"> Share Application
-                </label>
-            </div>
-            <div class="btn-group mb-4">
-                <button id="startCapture" class="btn btn-primary">📸 Start Capture</button>
-                <button id="stopCapture" class="btn btn-danger">🛑 Stop Capture</button>
-                <button id="toggleSettings" class="btn btn-info">⚙️ Settings</button>
+    <div class="container">
+        <h1 class="app-title text-center animate__animated animate__fadeIn">BLACX Media Stream Capture & Analysis</h1>
+        <p class="app-description text-center animate__animated animate__fadeIn animate__delay-1s">
+            A powerful web application for capturing and analyzing media streams from your webcam, desktop, or specific applications. 
+            Leverage AI for intelligent frame analysis and real-time insights.
+        </p>
+        
+        <div class="video-container animate__animated animate__fadeIn animate__delay-1s">
+            <video id="video" autoplay></video>
+        </div>
+        
+        <div class="button-container animate__animated animate__fadeIn animate__delay-2s">
+            <div class="source-buttons mb-4">
+                <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                    <label class="btn btn-source">
+                        <input type="radio" name="options" id="shareWebcam"> 
+                        <span class="btn-icon">📹</span>
+                        <span class="btn-text">Webcam</span>
+                    </label>
+                    <label class="btn btn-source">
+                        <input type="radio" name="options" id="shareScreen">
+                        <span class="btn-icon">🖥️</span>
+                        <span class="btn-text">Screen</span>
+                    </label>
+                    <label class="btn btn-source">
+                        <input type="radio" name="options" id="shareApplication">
+                        <span class="btn-icon">🎯</span>
+                        <span class="btn-text">Application</span>
+                    </label>
+                </div>
             </div>
             
+            <div class="control-buttons">
+                <button id="startCapture" class="btn btn-control btn-start">
+                    <span class="btn-icon">📸</span>
+                    <span class="btn-text">Start Capture</span>
+                    <span class="btn-status"></span>
+                </button>
+                <button id="stopCapture" class="btn btn-control btn-stop">
+                    <span class="btn-icon">🛑</span>
+                    <span class="btn-text">Stop Capture</span>
+                </button>
+                <button id="toggleSettings" class="btn btn-control btn-settings">
+                    <span class="btn-icon">⚙️</span>
+                    <span class="btn-text">Settings</span>
+                </button>
+            </div>
         </div>
-        <div class="settings-panel card card-body">
+        
+        <div class="settings-panel card">
             <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="prompt-tab" data-toggle="tab" href="#prompt" role="tab" aria-controls="prompt" aria-selected="true">Prompt</a>
+                    <a class="nav-link active" id="prompt-tab" data-toggle="tab" href="#prompt" role="tab">Prompt</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="false">Settings</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="api-tab" data-toggle="tab" href="#api" role="tab" aria-controls="api" aria-selected="false">API Config</a>
+                    <a class="nav-link" id="settings-tab" data-toggle="tab" href="#settings" role="tab">Settings</a>
                 </li>
             </ul>
             <div class="tab-content" id="settingsTabsContent">
-                <div class="tab-pane fade show active" id="prompt" role="tabpanel" aria-labelledby="prompt-tab">
-                    <textarea id="customPrompt" class="form-control" rows="3" placeholder="Enter custom prompt here...">Analyze this frame</textarea>
+                <div class="tab-pane fade show active" id="prompt" role="tabpanel">
+                    <div class="analysis-modes mb-4">
+                        <label class="d-block mb-3">Analysis Mode</label>
+                        <div class="mode-cards">
+                            <div class="mode-card" data-mode="general">
+                                <input type="radio" name="promptOption" value="general" id="generalMode" checked>
+                                <label for="generalMode">
+                                    <div class="mode-icon">🔍</div>
+                                    <div class="mode-title">General Analysis</div>
+                                    <div class="mode-description">Analyze text, objects, and scene context</div>
+                                </label>
+                            </div>
+                            <div class="mode-card" data-mode="weapon">
+                                <input type="radio" name="promptOption" value="weapon" id="weaponMode">
+                                <label for="weaponMode">
+                                    <div class="mode-icon">⚠️</div>
+                                    <div class="mode-title">Weapon Detection</div>
+                                    <div class="mode-description">Identify potential weapons and threats</div>
+                                </label>
+                            </div>
+                            <div class="mode-card" data-mode="handsign">
+                                <input type="radio" name="promptOption" value="handsign" id="handsignMode">
+                                <label for="handsignMode">
+                                    <div class="mode-icon">👋</div>
+                                    <div class="mode-title">Hand Sign Analysis</div>
+                                    <div class="mode-description">Detect gestures and sign language</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-prompt-header">
+                            <label for="customPrompt">Custom Analysis Instructions</label>
+                            <small class="text-muted">Optional - Add specific analysis requirements</small>
+                        </div>
+                        <textarea id="customPrompt" class="form-control" rows="3" placeholder="Add custom analysis instructions..."></textarea>
+                    </div>
                 </div>
-                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
-                    <input type="number" id="refreshRate" class="form-control" placeholder="Refresh rate in seconds" value="15">
+                <div class="tab-pane fade" id="settings" role="tabpanel">
+                    <div class="form-group">
+                        <label for="refreshRate">Capture Interval (seconds)</label>
+                        <input type="number" id="refreshRate" class="form-control" value="1" min="1" max="60">
+                    </div>
                 </div>
-                <div class="tab-pane fade" id="api" role="tabpanel" aria-labelledby="api-tab">
-                    <input type="text" id="apiKey" class="form-control" placeholder="OpenAI API Key" value="">
-                </div>
-                <button id="saveSettings" class="btn btn-success mt-3">Save Settings</button>
+                <button id="saveSettings" class="btn btn-primary mt-3">Save Settings</button>
             </div>
         </div>
+        
         <div id="formattedMarkdown" class="text-left"></div>
     </div>
-    <div class="container text-center">
-        created by BlacX
-    </div>
+    
+    <footer class="footer">
+        <p>Created with ❤️ by BlacX</p>
+    </footer>
+    
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

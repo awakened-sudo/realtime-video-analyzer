@@ -1,4 +1,7 @@
+python-dotenv
 quart
+python-telegram-bot
+Pillow
 opencv-python-headless
 httpx
 numpy
